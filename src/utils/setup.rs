@@ -3,18 +3,12 @@ use std::{
     io::{prelude::*, BufReader},
 };
 
-#[allow(dead_code)]
-pub enum InputType {
-    Test,
-    Main,
-}
-
-pub fn get_input_lines_vec(day_nr: u8, input_type: InputType) -> Vec<String> {
+pub fn get_input_lines_vec(day_nr: u8, test: bool) -> Vec<String> {
     let formated_day = format!("{:02}", day_nr);
     let path = format!(
-        "src/inputs/{}/{}.txt",
-        formated_day.as_str(),
-        input_type.as_str()
+        "src/inputs/{fd}{pre_ex}txt",
+        fd = formated_day.as_str(),
+        pre_ex = if test { ".test." } else { "." },
     );
 
     let file = File::open(path).expect("Should have been able to read the file");
@@ -23,13 +17,4 @@ pub fn get_input_lines_vec(day_nr: u8, input_type: InputType) -> Vec<String> {
     let line_string_vec = lines.map(|line| line.unwrap()).collect::<Vec<String>>();
 
     return line_string_vec;
-}
-
-impl InputType {
-    fn as_str(&self) -> &'static str {
-        match self {
-            InputType::Test => "test",
-            InputType::Main => "main",
-        }
-    }
 }

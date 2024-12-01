@@ -3,7 +3,7 @@ use crate::utils::setup;
 
 #[allow(dead_code)]
 pub fn part_01() {
-    let input = setup::get_input_lines_vec(1, setup::InputType::Main);
+    let input = setup::get_input_lines_vec(1, false);
     let input_lr_split = prep_lr_split_vec(&input);
     // dont need struct, doing it for training
     let mut input_structs: Vec<lr_struct::LR> = Vec::new();
@@ -26,7 +26,7 @@ pub fn part_01() {
 
 #[allow(dead_code)]
 pub fn part_02() {
-    let input = setup::get_input_lines_vec(1, setup::InputType::Main);
+    let input = setup::get_input_lines_vec(1, false);
     let input_lr_split = prep_lr_split_vec(&input);
 
     let mut sum = 0;
