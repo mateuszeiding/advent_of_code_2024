@@ -1,10 +1,12 @@
-use solutions::day_01;
+use solutions::*;
 
-mod utils;
 mod solutions;
 mod structs;
+mod utils;
 
 fn main() {
     // day_01::part_01();
-    day_01::part_02();
+    // day_01::part_02();
+    // day_02::part_01();
+    day_02::part_02();
 }
