@@ -20,7 +20,6 @@ pub fn part_01() {
         let dist = x.r.parse::<i32>().unwrap() - x.l.parse::<i32>().unwrap();
         sum += dist.abs();
     });
-
     println!("{:#?}", sum);
 }
 
