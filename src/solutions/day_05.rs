@@ -24,9 +24,51 @@ pub fn part_01() {
 
 #[allow(dead_code)]
 pub fn part_02() {
-    let input = setup::get_input_lines_vec(5, false);
+    let input = setup::get_multi_input_lines_vec(5, false);
 
-    println!("{:#?}", input);
+    let inst_map = get_instruction_map(&input[0]);
+    let mut sum = 0;
+    let mut invalid_updates: Vec<Vec<&str>> = Vec::new();
+
+    input[1].iter().for_each(|u| {
+        let pages = u.split(",").collect::<Vec<&str>>();
+        check_update(&pages, &inst_map, || {
+            invalid_updates.push(pages.clone());
+        });
+    });
+
+    // Can I do that 🥺
+    invalid_updates.dedup();
+
+    invalid_updates.iter().for_each(|u| {
+        let mut u_clone = u.clone();
+
+        let mut index = 0;
+        let mut place = 0;
+        while place < u_clone.len() {
+            let curr_check = u_clone[place];
+            if inst_map.contains_key(curr_check) && inst_map[curr_check].contains(&u_clone[index]) {
+                let val_to_move = u_clone.remove(index);
+                u_clone.insert(place, val_to_move);
+
+                index = 0;
+                continue;
+            }
+
+            if index == place {
+                place += 1;
+                index = 0;
+            } else {
+                index += 1;
+            }
+        }
+
+        let center_index = u_clone.len() / 2;
+        sum += u_clone[center_index].parse::<i32>().unwrap();
+
+    });
+
+    println!("{:#?}", sum);
 }
 
 fn get_instruction_map(input: &Vec<String>) -> HashMap<&str, Vec<&str>> {
