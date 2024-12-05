@@ -64,7 +64,7 @@ fn xmas_checker(x: usize, y: usize, input: &Vec<Vec<String>>) -> usize {
             }
 
             if x + 3 < input[y - i].len() && ne == i && input[y - i][x + i] == search_val[i] {
-                ne += 1;
+                ne += 2;
             }
         }
 
