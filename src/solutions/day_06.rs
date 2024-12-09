@@ -3,7 +3,7 @@ use crate::utils::setup;
 use std::collections::{BTreeMap, HashMap};
 use std::ops::Range;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Directions {
     North,
     East,
@@ -196,8 +196,6 @@ pub fn part_01() {
         r.iter().for_each(|x| res += x.len());
         sum += res;
     });
-
-    println!("{:?}", sum);
 }
 
 fn merge_ranges(ranges: &mut Vec<Range<usize>>) -> Vec<Range<usize>> {
@@ -221,7 +219,311 @@ fn merge_ranges(ranges: &mut Vec<Range<usize>>) -> Vec<Range<usize>> {
 
 #[allow(dead_code)]
 pub fn part_02() {
-    let input = setup::get_input_lines_vec(6, false);
+    let input = setup::get_input_lines_vec(6, true);
+    let matrix = setup::get_input_matrix(input);
+    let mut curr_position: Position = Position { x: 0, y: 0 };
+    let mut obstacles_y: BTreeMap<String, Vec<usize>> = BTreeMap::new();
+    let mut obstacles_x: BTreeMap<String, Vec<usize>> = BTreeMap::new();
+    let max_pos: Position = Position {
+        x: matrix[0].len(),
+        y: matrix.len(),
+    };
 
-    println!("{:#?}", input);
+    for n in 0..matrix.len() {
+        for (i, el) in matrix[n].iter().enumerate() {
+            match el.as_str() {
+                "#" => {
+                    obstacles_y
+                        .entry(n.to_string())
+                        .or_insert_with(Vec::new)
+                        .push(i);
+
+                    obstacles_x
+                        .entry(i.to_string())
+                        .or_insert_with(Vec::new)
+                        .push(n)
+                }
+                "^" => {
+                    curr_position.x = i;
+                    curr_position.y = n;
+                }
+                _ => continue,
+            }
+        }
+    }
+
+    for o in obstacles_y.values_mut() {
+        o.sort();
+    }
+
+    for o in obstacles_x.values_mut() {
+        o.sort();
+    }
+
+    let mut curr_dir = Directions::North;
+    let mut sum = 0;
+    let mut blockers: Vec<Position> = Vec::new();
+    while curr_position.x != 0
+        && curr_position.x != max_pos.x
+        && curr_position.y != 0
+        && curr_position.y != max_pos.y
+    {
+        match curr_dir {
+            Directions::North => {
+                let obstacle = obstacles_x[&curr_position.x.to_string()]
+                    .iter()
+                    .rev()
+                    .find(|&&y| y < curr_position.y);
+                match obstacle {
+                    Some(o) => {
+                        for n in (o + 1..curr_position.y).rev() {
+                            let res = check_next_three(
+                                Directions::East,
+                                curr_position.x,
+                                n,
+                                &obstacles_x,
+                                &obstacles_y,
+                            );
+                            if res == 1 {
+                                sum += 1;
+                                let exist = blockers.iter().position(|b| {
+                                    b.x == curr_position.x - 1 && b.y == curr_position.y
+                                });
+                                if exist.is_none() {
+                                    blockers.push(Position {
+                                        y: curr_position.y,
+                                        x: curr_position.x - 1,
+                                    });
+                                }
+                                break;
+                            }
+                        }
+                        curr_position.y = o + 1;
+                        curr_dir = Directions::East;
+                    }
+                    None => {
+                        curr_position.y = 0;
+                    }
+                }
+            }
+            Directions::South => {
+                let obstacle = obstacles_x[&curr_position.x.to_string()]
+                    .iter()
+                    .find(|&&y| y > curr_position.y);
+
+                match obstacle {
+                    Some(o) => {
+                        for n in curr_position.y..o - 1 {
+                            let res = check_next_three(
+                                Directions::West,
+                                curr_position.x,
+                                n,
+                                &obstacles_x,
+                                &obstacles_y,
+                            );
+                            if res == 1 {
+                                sum += 1;
+                                let exist = blockers.iter().position(|b| {
+                                    b.x == curr_position.x + 1 && b.y == curr_position.y
+                                });
+                                if exist.is_none() {
+                                    blockers.push(Position {
+                                        y: curr_position.y,
+                                        x: curr_position.x + 1,
+                                    });
+                                }
+                                break;
+                            }
+                        }
+                        curr_position.y = o - 1;
+                        curr_dir = Directions::West;
+                    }
+                    None => {
+                        curr_position.y = max_pos.y;
+                    }
+                }
+            }
+            Directions::East => {
+                let obstacle = obstacles_y[&curr_position.y.to_string()]
+                    .iter()
+                    .find(|&&x| x > curr_position.x);
+
+                match obstacle {
+                    Some(o) => {
+                        for n in curr_position.x..o - 1 {
+                            let res = check_next_three(
+                                Directions::South,
+                                n,
+                                curr_position.y,
+                                &obstacles_x,
+                                &obstacles_y,
+                            );
+                            if res == 1 {
+                                sum += 1;
+                                let exist = blockers.iter().position(|b| {
+                                    b.y == curr_position.y - 1 && b.x == curr_position.x
+                                });
+                                if exist.is_none() {
+                                    blockers.push(Position {
+                                        x: curr_position.x,
+                                        y: curr_position.y,
+                                    });
+                                }
+                                break;
+                            }
+                        }
+                        curr_position.x = o - 1;
+                        curr_dir = Directions::South;
+                    }
+                    None => {
+                        curr_position.x = max_pos.x;
+                    }
+                }
+            }
+            Directions::West => {
+                let obstacle = obstacles_y[&curr_position.y.to_string()]
+                    .iter()
+                    .rev()
+                    .find(|&&x| x < curr_position.x);
+
+                match obstacle {
+                    Some(o) => {
+                        for n in (o + 1..curr_position.x).rev() {
+                            let res = check_next_three(
+                                Directions::North,
+                                n,
+                                curr_position.y,
+                                &obstacles_x,
+                                &obstacles_y,
+                            );
+                            if res == 1 {
+                                sum += 1;
+                                let exist = blockers.iter().position(|b| {
+                                    b.y == curr_position.y + 1 && b.x == curr_position.x
+                                });
+                                if exist.is_none() {
+                                    blockers.push(Position {
+                                        x: curr_position.x,
+                                        y: curr_position.y,
+                                    });
+                                }
+                                break;
+                            }
+                        }
+                        curr_position.x = o + 1;
+                        curr_dir = Directions::North;
+                    }
+                    None => {
+                        curr_position.x = 0;
+                    }
+                }
+            }
+        }
+    }
+    println!("{:?} {} {:?}", "-----", sum, curr_position);
+    println!("{:?} ", blockers);
+    println!("{:?}", blockers.len());
+}
+
+fn check_next_three(
+    curr_dir: Directions,
+    x: usize,
+    y: usize,
+    hm_x: &BTreeMap<String, Vec<usize>>,
+    hm_y: &BTreeMap<String, Vec<usize>>,
+) -> usize {
+    let mut dir = curr_dir.clone();
+    let mut pos = Position { x, y };
+    let mut res = 0;
+
+    for _ in 0..4 {
+        match dir {
+            Directions::North => {
+                if !hm_x.contains_key(&pos.x.to_string()) {
+                    break;
+                }
+                let check = check_one_step(&dir, &pos, &hm_x, &hm_y);
+                if check.is_none() {
+                    break;
+                }
+
+                pos.y = check.unwrap() + 1;
+                dir = Directions::East;
+            }
+
+            Directions::South => {
+                if !hm_x.contains_key(&pos.x.to_string()) {
+                    break;
+                }
+                let check = check_one_step(&dir, &pos, &hm_x, &hm_y);
+                if check.is_none() {
+                    break;
+                }
+
+                pos.y = check.unwrap() - 1;
+                dir = Directions::West;
+            }
+
+            Directions::West => {
+                if !hm_y.contains_key(&pos.y.to_string()) {
+                    break;
+                }
+                let check = check_one_step(&dir, &pos, &hm_x, &hm_y);
+                if check.is_none() {
+                    break;
+                }
+                pos.x = check.unwrap() + 1;
+                dir = Directions::North;
+            }
+            Directions::East => {
+                if !hm_y.contains_key(&pos.y.to_string()) {
+                    break;
+                }
+                let check = check_one_step(&dir, &pos, &hm_x, &hm_y);
+                if check.is_none() {
+                    break;
+                }
+
+                pos.x = check.unwrap() - 1;
+                dir = Directions::South;
+            }
+        };
+        res += 1;
+    }
+    if res == 4 {
+        1
+    } else {
+        0
+    }
+}
+
+fn check_one_step(
+    curr_dir: &Directions,
+    curr_position: &Position,
+    obstacles_x: &BTreeMap<String, Vec<usize>>,
+    obstacles_y: &BTreeMap<String, Vec<usize>>,
+) -> Option<usize> {
+    return match curr_dir {
+        Directions::North => obstacles_x[&curr_position.x.to_string()]
+            .iter()
+            .rev()
+            .find(|&&y| y < curr_position.y)
+            .copied(),
+
+        Directions::South => obstacles_x[&curr_position.x.to_string()]
+            .iter()
+            .find(|&&y| y > curr_position.y)
+            .copied(),
+
+        Directions::East => obstacles_y[&curr_position.y.to_string()]
+            .iter()
+            .find(|&&x| x > curr_position.x)
+            .copied(),
+
+        Directions::West => obstacles_y[&curr_position.y.to_string()]
+            .iter()
+            .rev()
+            .find(|&&x| x < curr_position.x)
+            .copied(),
+    };
 }
