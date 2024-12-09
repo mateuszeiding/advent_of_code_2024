@@ -109,12 +109,20 @@ pub fn part_02() {
     let mut antinodes: Vec<Position> = Vec::new();
     for ant in antenas.values() {
         for n in 0..ant.len() {
+            if ant.len() > 1 {
+                antinodes.push(Position {
+                    x: ant[n].x,
+                    y: ant[n].y,
+                });
+            }
             for m in n + 1..ant.len() {
                 get_antinodes_02(&ant[n], &ant[m], &mut antinodes, max_x, max_y);
             }
         }
     }
 
+    antinodes.sort_by(|a, b| a.x.cmp(&b.x).then_with(|| a.y.cmp(&b.y)));
+    antinodes.dedup();
     println!("{}", antinodes.len());
 }
 
@@ -127,24 +135,31 @@ fn get_antinodes_02(
 ) {
     let x_diff: i32 = ant_1.x as i32 - ant_2.x as i32;
     let y_diff: i32 = ant_1.y as i32 - ant_2.y as i32;
-    let mut node_1_x = 0;
-    let mut node_2_x = 0;
-    let mut node_1_y = 0;
-    let mut node_2_y = 0;
+    let mut node_1_x;
+    let mut node_2_x;
+    let mut node_1_y;
+    let mut node_2_y;
     if x_diff < 0 {
         node_1_x = ant_2.x as i32 + x_diff.abs();
         node_2_x = ant_1.x as i32 - x_diff.abs();
+        if y_diff < 0 {
+            node_1_y = ant_2.y as i32 + y_diff.abs();
+            node_2_y = ant_1.y as i32 - y_diff.abs();
+        } else {
+            node_1_y = ant_1.y as i32 + y_diff.abs();
+            node_2_y = ant_2.y as i32 - y_diff.abs();
+        }
     } else {
         node_1_x = ant_1.x as i32 + x_diff.abs();
         node_2_x = ant_2.x as i32 - x_diff.abs();
+        if y_diff < 0 {
+            node_1_y = ant_1.y as i32 - y_diff.abs();
+            node_2_y = ant_2.y as i32 + y_diff.abs();
+        } else {
+            node_1_y = ant_2.y as i32 - y_diff.abs();
+            node_2_y = ant_1.y as i32 + y_diff.abs();
+        }
     };
-    if y_diff < 0 {
-        node_1_y = ant_2.y as i32 + y_diff.abs();
-        node_2_y = ant_1.y as i32 - y_diff.abs();
-    } else {
-        node_1_y = ant_1.y as i32 + y_diff.abs();
-        node_2_y = ant_2.y as i32 - y_diff.abs();
-    }
 
     while node_1_y >= 0 && node_1_y < max_y && node_1_x >= 0 && node_1_x < max_x {
         antinodes.push(Position {
@@ -152,15 +167,20 @@ fn get_antinodes_02(
             y: node_1_y as usize,
         });
         if x_diff < 0 {
-            node_1_x = ant_2.x as i32 + x_diff.abs();
+            node_1_x += x_diff.abs();
+            if y_diff < 0 {
+                node_1_y += y_diff.abs();
+            } else {
+                node_1_y += y_diff.abs();
+            }
         } else {
-            node_1_x = ant_1.x as i32 + x_diff.abs();
+            node_1_x += x_diff.abs();
+            if y_diff < 0 {
+                node_1_y -= y_diff.abs();
+            } else {
+                node_1_y -= y_diff.abs();
+            }
         };
-        if y_diff < 0 {
-            node_1_y = ant_2.y as i32 + y_diff.abs();
-        } else {
-            node_1_y = ant_1.y as i32 + y_diff.abs();
-        }
     }
 
     while node_2_y >= 0 && node_2_y < max_y && node_2_x >= 0 && node_2_x < max_x {
@@ -169,14 +189,19 @@ fn get_antinodes_02(
             y: node_2_y as usize,
         });
         if x_diff < 0 {
-            node_2_x = ant_1.x as i32 - x_diff.abs();
+            node_2_x -= x_diff.abs();
+            if y_diff < 0 {
+                node_2_y -= y_diff.abs();
+            } else {
+                node_2_y -= y_diff.abs();
+            }
         } else {
-            node_2_x = ant_2.x as i32 - x_diff.abs();
+            node_2_x -= x_diff.abs();
+            if y_diff < 0 {
+                node_2_y += y_diff.abs();
+            } else {
+                node_2_y += y_diff.abs();
+            }
         };
-        if y_diff < 0 {
-            node_2_y = ant_1.y as i32 - y_diff.abs();
-        } else {
-            node_2_y = ant_2.y as i32 - y_diff.abs();
-        }
     }
 }
