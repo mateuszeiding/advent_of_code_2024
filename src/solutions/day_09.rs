@@ -48,13 +48,9 @@ pub fn part_01() {
 
 #[allow(dead_code)]
 pub fn part_02() {
-    let input = setup::get_input_lines_vec(9, false)
-        .first()
-        .unwrap()
-        .clone();
+    let input = setup::get_input_lines_vec(9, true).first().unwrap().clone();
     let disc_map: Vec<String> = input.chars().map(|x| x.to_string()).collect();
-    let mut blocks: Vec<String> = Vec::new();
-
+    let mut blocks: Vec<Vec<String>> = Vec::new();
     let mut id = 0;
     for n in 0..disc_map.len() {
         let dig = disc_map[n].parse::<usize>().unwrap();
@@ -67,9 +63,9 @@ pub fn part_02() {
             sign = ".".to_string();
         };
 
-        let mut new_val: String = String::new();
+        let mut new_val: Vec<String> = Vec::new();
         for _ in 0..dig {
-            new_val += &(",".to_string() + &sign);
+            new_val.push(sign.clone());
         }
         if new_val.len() != 0 {
             blocks.push(new_val);
@@ -77,20 +73,21 @@ pub fn part_02() {
     }
 
     for n in (0..blocks.len()).rev() {
-        if !blocks[n].contains(".") {
-            let first_dot_pos = blocks.iter().position(|x| {
-                x.contains(".") && x.replace(",", "").len() >= blocks[n].replace(",", "").len()
-            });
+        if !blocks[n].contains(&".".to_string()) {
+            let block_len = blocks[n].len();
+            let first_dot_pos = blocks
+                .iter()
+                .position(|x| x.contains(&".".to_string()) && x.len() >= block_len);
 
             match first_dot_pos {
                 Some(dfp) => {
                     if n > dfp {
-                        let diff =
-                            blocks[dfp].replace(",", "").len() - blocks[n].replace(",", "").len();
+                        let diff = blocks[dfp].len() - block_len;
                         blocks.swap(dfp, n);
                         if diff > 0 {
-                            blocks[n] = blocks[n][0..blocks[n].len() - diff].to_string();
-                            blocks.insert(dfp + 1, ".".to_string().repeat(diff));
+                            blocks[n] = blocks[n][0..block_len].to_vec();
+                            println!("{:?} {:?}", blocks[n], blocks[dfp]);
+                            blocks.insert(dfp + 1, vec![".".to_string(); diff]);
                         }
                     }
                 }
@@ -102,25 +99,29 @@ pub fn part_02() {
     let mut sum: usize = 0;
     let mut iter: usize = 0;
     for n in 0..blocks.len() {
-        if blocks[n].contains(".") {
-            let wo_comma: Vec<_> = blocks[n]
-                .chars()
-                .filter(|x| x.to_string() == ".".to_string())
-                .collect();
-            iter += wo_comma.len();
+        if blocks[n].contains(&".".to_string()) {
+            iter += blocks[n].len();
             continue;
         }
         let chars: Vec<usize> = blocks[n]
-            .split(",")
-            .filter(|x| !x.is_empty())
+            .iter()
             .map(|x| x.parse::<usize>().unwrap())
             .collect();
-        println!("{:?}", chars);
+
         for m in 0..chars.len() {
             sum += iter * chars[m];
             iter += 1;
         }
     }
 
+    println!(
+        "{:?}",
+        blocks
+            .iter()
+            .flatten()
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>()
+            .join("")
+    );
     println!("{} {}", sum, iter);
 }

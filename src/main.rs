@@ -20,7 +20,7 @@ fn main() {
     // day_07::part_01();
     // day_07::part_02();
     // day_08::part_01();
-    day_08::part_02();
+    // day_08::part_02();
     // day_09::part_01();
-    // day_09::part_02();
+    day_09::part_02();
 }
