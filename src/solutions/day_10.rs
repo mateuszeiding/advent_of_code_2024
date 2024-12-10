@@ -102,7 +102,42 @@ fn look_around(
 
 #[allow(dead_code)]
 pub fn part_02() {
-    let input = setup::get_input_lines_vec(2, false);
+    let input = setup::get_input_lines_vec(10, false);
+    let matrix = setup::get_input_matrix(input)
+        .iter()
+        .map(|x| x.iter().map(|y| y.parse::<usize>().unwrap()).collect())
+        .collect::<Vec<Vec<usize>>>();
 
-    println!("{:#?}", input);
+    let max_pos = Position {
+        x: matrix[0].len() - 1,
+        y: matrix.len() - 1,
+    };
+
+    let mut all_heads: Vec<Position> = Vec::new();
+    matrix.iter().enumerate().for_each(|(y, row)| {
+        row.iter().enumerate().for_each(|(x, &column)| {
+            if column == 0 {
+                all_heads.push(Position { x, y });
+            }
+        })
+    });
+
+    let mut im_here: Vec<Vec<Position>> = Vec::new();
+    for i in 0..all_heads.len() {
+        im_here.push(vec![all_heads[i]]);
+        for n in 0..9 {
+            let mut ill_be_there: Vec<Position> = Vec::new();
+            im_here[i].iter().for_each(|here| {
+                let new_pos = look_around(&here, &n, &matrix, &max_pos);
+                match new_pos {
+                    Some(np) => ill_be_there.extend(np),
+                    None => {}
+                }
+            });
+
+            im_here[i] = ill_be_there;
+        }
+    }
+    let all_tops: Vec<_> = im_here.iter().flatten().collect();
+    println!("{:#?}", all_tops.len());
 }
