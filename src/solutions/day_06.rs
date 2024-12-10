@@ -425,6 +425,7 @@ pub fn part_02() {
     println!("{:?}", blockers.len());
 }
 
+#[allow(dead_code, warnings)]
 fn check_next_three(
     curr_dir: Directions,
     x: usize,

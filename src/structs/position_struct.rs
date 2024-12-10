@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct Position {
     pub x: usize,
     pub y: usize,
@@ -9,5 +9,6 @@ impl PartialEq for Position {
         self.x == other.x && self.y == other.y
     }
 }
+
 
 impl Eq for Position {}
