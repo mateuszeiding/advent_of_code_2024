@@ -443,11 +443,6 @@ fn check_next_three(
                     break;
                 }
                 let check = check_one_step(&dir, &pos, &hm_x, &hm_y);
-                if check.is_none() {
-                    break;
-                }
-
-                pos.y = check.unwrap() + 1;
                 dir = Directions::East;
             }
 
@@ -456,11 +451,6 @@ fn check_next_three(
                     break;
                 }
                 let check = check_one_step(&dir, &pos, &hm_x, &hm_y);
-                if check.is_none() {
-                    break;
-                }
-
-                pos.y = check.unwrap() - 1;
                 dir = Directions::West;
             }
 
@@ -469,10 +459,6 @@ fn check_next_three(
                     break;
                 }
                 let check = check_one_step(&dir, &pos, &hm_x, &hm_y);
-                if check.is_none() {
-                    break;
-                }
-                pos.x = check.unwrap() + 1;
                 dir = Directions::North;
             }
             Directions::East => {
@@ -480,11 +466,6 @@ fn check_next_three(
                     break;
                 }
                 let check = check_one_step(&dir, &pos, &hm_x, &hm_y);
-                if check.is_none() {
-                    break;
-                }
-
-                pos.x = check.unwrap() - 1;
                 dir = Directions::South;
             }
         };
@@ -496,34 +477,57 @@ fn check_next_three(
         0
     }
 }
-
 fn check_one_step(
     curr_dir: &Directions,
     curr_position: &Position,
     obstacles_x: &BTreeMap<String, Vec<usize>>,
     obstacles_y: &BTreeMap<String, Vec<usize>>,
-) -> Option<usize> {
-    return match curr_dir {
-        Directions::North => obstacles_x[&curr_position.x.to_string()]
-            .iter()
-            .rev()
-            .find(|&&y| y < curr_position.y)
-            .copied(),
+) -> (Directions, Position) {
+    // Actually it's on his way but 'on my way' sounds better
+    let obstacle_on_my_way = match curr_dir {
+        Directions::North => {
+            let po = obstacles_x[&curr_position.x.to_string()]
+                .iter()
+                .rev()
+                .find(|&&y| y < curr_position.y);
 
-        Directions::South => obstacles_x[&curr_position.x.to_string()]
-            .iter()
-            .find(|&&y| y > curr_position.y)
-            .copied(),
+            Position {
+                x: curr_position.x,
+                y: po.unwrap_or(&0).clone(),
+            }
+        }
+        Directions::South => {
+            let po = obstacles_x[&curr_position.x.to_string()]
+                .iter()
+                .find(|&&y| y > curr_position.y);
 
-        Directions::East => obstacles_y[&curr_position.y.to_string()]
-            .iter()
-            .find(|&&x| x > curr_position.x)
-            .copied(),
+            Position {
+                x: curr_position.x,
+                y: po.unwrap_or(&10).clone(),
+            }
+        }
+        Directions::East => {
+            let po = obstacles_y[&curr_position.y.to_string()]
+                .iter()
+                .find(|&&x| x > curr_position.x);
 
-        Directions::West => obstacles_y[&curr_position.y.to_string()]
-            .iter()
-            .rev()
-            .find(|&&x| x < curr_position.x)
-            .copied(),
+            Position {
+                x: po.unwrap_or(&10).clone(),
+                y: curr_position.y,
+            }
+        }
+        Directions::West => {
+            let po = obstacles_y[&curr_position.y.to_string()]
+                .iter()
+                .rev()
+                .find(|&&x| x < curr_position.x);
+
+            Position {
+                x: po.unwrap_or(&0).clone(),
+                y: curr_position.x,
+            }
+        }
     };
+
+    return (curr_dir.clone(), obstacle_on_my_way);
 }
