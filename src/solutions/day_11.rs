@@ -1,5 +1,4 @@
 use crate::utils::setup;
-use std::collections::HashMap;
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -29,9 +28,10 @@ fn blink(stones: &mut Vec<usize>) {
     stones.iter().for_each(|stone| match stone {
         s if s == &0 => new_stones.push(1),
         s if s.to_string().len() % 2 == 0 => {
-            let stn = s.to_string();
-            new_stones.push(stn[0..stn.len() / 2].parse::<usize>().unwrap());
-            new_stones.push(stn[stn.len() / 2..stn.len()].parse::<usize>().unwrap());
+            let dig = (*s as f64).log(10.0).floor() as usize + 1;
+            let div = 10_usize.pow((dig / 2) as u32);
+            new_stones.push(s / div);
+            new_stones.push(s & div);
         }
         s => new_stones.push(s * 2024),
     });
