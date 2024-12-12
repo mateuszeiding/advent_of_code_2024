@@ -16,7 +16,7 @@ pub fn part_01() {
 
     let blinker_guy = 6;
 
-    for n in 0..blinker_guy {
+    for _ in 0..blinker_guy {
         blink(&mut stones);
     }
     println!("---{}", stones.len());

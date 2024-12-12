@@ -16,7 +16,7 @@ fn main() {
     // day_05::part_01();
     // day_05::part_02();
     // day_06::part_01();
-    // day_06::part_02();
+    day_06::part_02();
     // day_07::part_01();
     // day_07::part_02();
     // day_08::part_01();
@@ -26,6 +26,6 @@ fn main() {
     // day_10::part_01();
     // day_10::part_02();
     // day_11::part_01();
-    day_11::part_02();
+    // day_11::part_02();
     // day_12::part_01();
 }
