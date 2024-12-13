@@ -230,7 +230,7 @@ fn merge_ranges(ranges: &mut Vec<Range<usize>>) -> Vec<Range<usize>> {
 
 #[allow(dead_code)]
 pub fn part_02() {
-    let input = setup::get_input_lines_vec(6, true);
+    let input = setup::get_input_lines_vec(6, false);
     let matrix = setup::get_input_matrix(input);
     let mut curr_position: Position = Position { x: 0, y: 0 };
     let mut obstacles: Vec<Position> = Vec::new();
@@ -265,7 +265,7 @@ pub fn part_02() {
     let go_on_adventure = |scp: &Position,
                            sdir: &Directions,
                            po: &HashMap<Directions, Vec<Position>>|
-     -> Option<Position> {
+     -> Option<(Directions, Position)> {
         let mut cp = scp.clone();
         let mut dir = sdir.clone().next();
 
@@ -283,7 +283,7 @@ pub fn part_02() {
                 Some(obst) => {
                     let po_vec = po.get(&dir);
                     if po_vec.is_some() && po_vec.unwrap().iter().find(|&x| x.eq(obst)).is_some() {
-                        return Some(cp.clone());
+                        return Some((dir, cp.clone()));
                     }
 
                     match dir {
@@ -303,7 +303,7 @@ pub fn part_02() {
     let mut sum = 0;
     let mut curr_dir = Directions::North;
 
-    let mut umpaloop_village: Vec<Position> = Vec::new();
+    let mut umpaloop_village: HashMap<Directions, Vec<Position>> = HashMap::new();
     while curr_position.x != 0
         && curr_position.x != max_pos.x
         && curr_position.y != 0
@@ -361,8 +361,12 @@ pub fn part_02() {
             let loopa_umper = go_on_adventure(&curr_position, &curr_dir, &past_obst);
             if loopa_umper.is_some() {
                 let lu = loopa_umper.unwrap();
-                if umpaloop_village.iter().find(|x| x.eq(&&lu)).is_none() {
-                    umpaloop_village.push(loopa_umper.unwrap());
+                let lukey = umpaloop_village.get(&lu.0);
+                if lukey.is_none() || lukey.unwrap().iter().find(|x| x.eq(&&lu.1)).is_none() {
+                    umpaloop_village
+                        .entry(lu.0)
+                        .or_insert_with(Vec::new)
+                        .push(lu.1);
                     sum += 1;
                 }
             }
