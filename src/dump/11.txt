@@ -67,4 +67,3 @@ On number.len() % 2 == 0 split usize instead of convert to_string
 42 2.8948098s
 43 4.2454792s
 44 6.0339515s
-
