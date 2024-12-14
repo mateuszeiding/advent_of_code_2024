@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{prelude::*, BufReader}
+    io::{prelude::*, BufReader},
 };
 
 pub fn get_input_lines_vec(day_nr: u8, test: bool) -> Vec<String> {
@@ -14,7 +14,7 @@ pub fn get_input_lines_vec(day_nr: u8, test: bool) -> Vec<String> {
     let file = File::open(path).expect("Should have been able to read the file");
     let reader = BufReader::new(file);
     let lines = reader.lines().filter(|line| line.is_ok());
-    
+
     let line_string_vec = lines.map(|line| line.unwrap()).collect::<Vec<String>>();
 
     return line_string_vec;
@@ -31,11 +31,28 @@ pub fn get_input_matrix(vec: Vec<String>) -> Vec<Vec<String>> {
     matrix
 }
 
+#[allow(dead_code)]
+pub fn print_matrix<F>(matrix: Vec<Vec<String>>, matcher: Option<F>)
+where
+    F: Fn(usize, usize, String),
+{
+    for (y, row) in matrix.iter().enumerate() {
+        for (x, value) in row.iter().enumerate() {
+            if let Some(ref m) = matcher {
+                m(y, x, matrix[y][x].to_string());
+            } else {
+                print!("{}", value);
+            }
+        }
+        println!();
+    }
+}
+
 pub fn get_multi_input_lines_vec(day_nr: u8, test: bool) -> Vec<Vec<String>> {
     let vec = get_input_lines_vec(day_nr, test);
-    let mut multi_lines : Vec<Vec<String>> = Vec::new();
+    let mut multi_lines: Vec<Vec<String>> = Vec::new();
     let mut current_line: Vec<String> = Vec::new();
-    vec.iter().for_each(|line|{
+    vec.iter().for_each(|line| {
         if line.trim().is_empty() {
             if !current_line.is_empty() {
                 multi_lines.push(current_line.clone());
@@ -43,9 +60,10 @@ pub fn get_multi_input_lines_vec(day_nr: u8, test: bool) -> Vec<Vec<String>> {
             }
         } else {
             current_line.push(line.to_string());
-        }    });
+        }
+    });
 
-        if !current_line.is_empty() {
+    if !current_line.is_empty() {
         multi_lines.push(current_line);
     }
     return multi_lines;

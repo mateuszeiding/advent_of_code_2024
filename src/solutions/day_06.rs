@@ -283,6 +283,12 @@ pub fn part_02() {
                 Some(obst) => {
                     let po_vec = po.get(&dir);
                     if po_vec.is_some() && po_vec.unwrap().iter().find(|&x| x.eq(obst)).is_some() {
+                        match dir {
+                            Directions::North => cp.x -= 1,
+                            Directions::South => cp.x += 1,
+                            Directions::East => cp.y -= 1,
+                            Directions::West => cp.y += 1,
+                        };
                         return Some((dir, cp.clone()));
                     }
 
@@ -367,6 +373,7 @@ pub fn part_02() {
                         .entry(lu.0)
                         .or_insert_with(Vec::new)
                         .push(lu.1);
+
                     sum += 1;
                 }
             }
@@ -383,4 +390,16 @@ pub fn part_02() {
 
     println!("{:?}", umpaloop_village);
     println!("{:?}", sum);
+
+    let um: Vec<_> = umpaloop_village.into_values().flat_map(|x| x).collect();
+    setup::print_matrix(
+        matrix,
+        Some(|y, x, c| {
+            if um.iter().find(|ma| ma.y == y && ma.x == x).is_some() {
+                print!("%");
+            } else {
+                print!("{}", c);
+            }
+        }),
+    );
 }
