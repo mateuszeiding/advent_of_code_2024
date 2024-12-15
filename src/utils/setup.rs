@@ -32,7 +32,7 @@ pub fn get_input_matrix(vec: Vec<String>) -> Vec<Vec<String>> {
 }
 
 #[allow(dead_code)]
-pub fn print_matrix<F>(matrix: Vec<Vec<String>>, matcher: Option<F>)
+pub fn print_matrix<F>(matrix: &Vec<Vec<String>>, matcher: Option<F>)
 where
     F: Fn(usize, usize, String),
 {
@@ -46,6 +46,7 @@ where
         }
         println!();
     }
+    println!("-------------");
 }
 
 pub fn get_multi_input_lines_vec(day_nr: u8, test: bool) -> Vec<Vec<String>> {

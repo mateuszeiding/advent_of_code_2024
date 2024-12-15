@@ -268,7 +268,7 @@ pub fn part_02() {
      -> Option<(Directions, Position)> {
         let mut cp = scp.clone();
         let mut dir = sdir.clone().next();
-
+        let mut matrix_cp = matrix.clone();
         while cp.x != 0 && cp.x != max_pos.x && cp.y != 0 && cp.y != max_pos.y {
             let obstacle = obstacles.iter().find(|x| finder(x, &cp, &dir));
 
@@ -289,9 +289,19 @@ pub fn part_02() {
                             Directions::East => cp.y -= 1,
                             Directions::West => cp.y += 1,
                         };
+
+                        matrix_cp[cp.y][cp.x] = "🟨".to_string();
+                        setup::print_matrix(
+                            &matrix_cp,
+                            Some(|_y, _x, c: String| {
+                                print!("{}", c);
+                            }),
+                        );
+                        println!("-------");
                         return Some((dir, cp.clone()));
                     }
 
+                    matrix_cp[cp.y][cp.x] = "0".to_string();
                     match dir {
                         Directions::North => cp.y = obst.y + 1,
                         Directions::South => cp.y = obst.y - 1,
@@ -303,6 +313,7 @@ pub fn part_02() {
                 }
             }
         }
+
         return None;
     };
 
@@ -390,16 +401,4 @@ pub fn part_02() {
 
     println!("{:?}", umpaloop_village);
     println!("{:?}", sum);
-
-    let um: Vec<_> = umpaloop_village.into_values().flat_map(|x| x).collect();
-    setup::print_matrix(
-        matrix,
-        Some(|y, x, c| {
-            if um.iter().find(|ma| ma.y == y && ma.x == x).is_some() {
-                print!("%");
-            } else {
-                print!("{}", c);
-            }
-        }),
-    );
 }

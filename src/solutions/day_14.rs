@@ -1,8 +1,6 @@
 use crate::utils::setup;
 use regex::{Captures, Regex};
 use std::fmt;
-use std::thread;
-use std::time::Duration;
 
 #[derive(Clone, Debug)]
 struct Pos {
