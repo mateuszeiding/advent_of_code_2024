@@ -1,8 +1,6 @@
 use crate::structs::position_struct::Position;
 use crate::utils::setup;
 use std::ops::RangeInclusive;
-use std::thread;
-use std::time::Duration;
 
 #[derive(Debug)]
 struct Robot {
