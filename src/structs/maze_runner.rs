@@ -46,12 +46,11 @@ impl MazeRunner {
         return inst;
     }
 
-    pub fn shortest(&mut self, print_winners: bool) -> Runner {
+    pub fn shortest(&mut self, print_winners: bool) -> Option<Runner> {
         let mut winner: Option<Runner> = None;
         let mut new_runners: HashMap<Position, Runner> = HashMap::new();
 
         while self.runners.len() > 0 {
-            let start = Instant::now();
             self.runners.iter_mut().for_each(|rnr| {
                 if rnr.position.x == self.end_position.x && rnr.position.y == self.end_position.y {
                     winner = Some(rnr.clone());
@@ -79,8 +78,6 @@ impl MazeRunner {
                 .map(|v| v.clone())
                 .collect();
 
-            let dur = start.elapsed();
-            println!("{:?} {:}", dur, self.runners.len());
             new_runners.clear();
         }
 
@@ -99,7 +96,7 @@ impl MazeRunner {
             );
         }
 
-        winner.unwrap()
+        winner
     }
 
     pub fn run(&mut self, print_winners: bool) -> Vec<Runner> {
