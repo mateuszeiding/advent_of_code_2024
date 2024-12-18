@@ -46,87 +46,98 @@ impl MazeRunner {
         return inst;
     }
 
+    pub fn shortest(&mut self, print_winners: bool) -> Runner {
+        let mut winner: Option<Runner> = None;
+        let mut new_runners: HashMap<Position, Runner> = HashMap::new();
+
+        while self.runners.len() > 0 {
+            let start = Instant::now();
+            self.runners.iter_mut().for_each(|rnr| {
+                if rnr.position.x == self.end_position.x && rnr.position.y == self.end_position.y {
+                    winner = Some(rnr.clone());
+                } else {
+                    rnr.run().iter().for_each(|r| {
+                        let entry = new_runners.entry(r.position).or_insert(r.clone());
+                        if entry.path.len() > r.path.len() {
+                            *entry = r.clone();
+                        }
+                    });
+                }
+            });
+
+            if winner.is_some() {
+                break;
+            }
+            self.runners = new_runners
+                .iter()
+                .map(|(_, v)| v.clone())
+                .filter(|nr| {
+                    !new_runners
+                        .iter()
+                        .any(|any| any.1.path.contains(&nr.position))
+                })
+                .map(|v| v.clone())
+                .collect();
+
+            let dur = start.elapsed();
+            println!("{:?} {:}", dur, self.runners.len());
+            new_runners.clear();
+        }
+
+        if print_winners && winner.is_some() {
+            let w = winner.clone().unwrap();
+            println!("{:?}", w.path.len());
+            setup::print_matrix(
+                &self.maze,
+                Some(|y, x, c: String| {
+                    if w.path.iter().find(|p| p.x == x && p.y == y).is_some() {
+                        print!("•");
+                    } else {
+                        print!("{}", c);
+                    }
+                }),
+            );
+        }
+
+        winner.unwrap()
+    }
+
     pub fn run(&mut self, print_winners: bool) -> Vec<Runner> {
         let mut winners: Vec<Runner> = Vec::new();
-        let mut new_runners: HashMap<Position, Runner> = HashMap::new();
-        let mut smallest = 0;
+        let mut new_runners: Vec<Runner> = Vec::new();
 
-        let start = Instant::now();
-
-        let mut iter = 0;
         while self.runners.len() > 0 {
             let start = Instant::now();
             self.runners.iter_mut().for_each(|rnr| {
                 if rnr.position.x == self.end_position.x && rnr.position.y == self.end_position.y {
                     winners.push(rnr.clone());
                 } else {
-                    rnr.run().iter().for_each(|nrnr| {
-                        let entry = new_runners.entry(nrnr.position).or_insert(nrnr.clone());
-                        if entry.points > nrnr.points {
-                            *entry = nrnr.clone();
-                        } else if entry.points == nrnr.points {
-                            setup::print_matrix(
-                                &self.maze,
-                                Some(|y, x, c: String| {
-                                    if entry.path.iter().find(|p| p.x == x && p.y == y).is_some() {
-                                        print!("•");
-                                    } else {
-                                        print!("{}", c);
-                                    }
-                                }),
-                            );
-
-                            setup::print_matrix(
-                                &self.maze,
-                                Some(|y, x, c: String| {
-                                    if nrnr.path.iter().find(|p| p.x == x && p.y == y).is_some() {
-                                        print!("•");
-                                    } else {
-                                        print!("{}", c);
-                                    }
-                                }),
-                            );
-
-                            println!("====vvvvvvvvvvvvvvvvvvvvvvv======================");
-                            entry.path.extend(nrnr.path.clone());
-                            entry
-                                .path
-                                .sort_by(|a, b| a.x.cmp(&b.x).then_with(|| a.y.cmp(&b.y)));
-                            entry.path.dedup();
-                        }
-                    });
+                    new_runners.extend(rnr.run());
                 }
             });
 
-            println!("==========================");
-            let min_win = winners.iter().min_by_key(|&w| w.points);
-            if min_win.is_some() {
-                let mw = min_win.unwrap();
-                if mw.points < smallest || smallest == 0 {
-                    smallest = mw.points
-                };
-            };
+            new_runners.sort_by(|a, b| a.points.cmp(&b.points));
 
-            if smallest != 0 && new_runners.iter().all(|x| x.1.points > smallest) {
-                break;
-            }
+            self.runners = new_runners
+                .iter()
+                .filter(|nr| {
+                    !new_runners
+                        .iter()
+                        .any(|any| any.path.contains(&nr.position) && any.points < nr.points)
+                })
+                .map(|v| v.clone())
+                .collect();
 
-            self.runners = new_runners.iter().map(|v| v.1.clone()).collect();
-            if winners.len() > 0 && smallest != 0 {
-                self.runners.retain(|rn| rn.points < smallest);
-            }
+            let dur = start.elapsed();
+            println!("{:?} {:}", dur, self.runners.len());
             new_runners.clear();
-            let duration = start.elapsed();
-            println!("{:?} {:?} {:?}", iter, duration, self.runners.len());
-            iter += 1;
         }
-        let duration = start.elapsed();
-        println!("{:?} {:?}", duration, self.runners.len());
 
+        let sm = winners.iter().map(|p| p.points).min().unwrap();
         winners.sort_by_key(|w| w.points);
         let w: Vec<_> = winners
             .iter()
-            .filter(|&x| x.points == smallest)
+            .filter(|&x| x.points == sm)
             .map(|x| x.clone())
             .collect();
 
