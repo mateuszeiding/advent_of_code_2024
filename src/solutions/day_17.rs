@@ -162,14 +162,15 @@ pub fn part_02() {
             .to_string()
     };
 
-    let mut a = get_params(&input[0][0]).parse::<usize>().unwrap();
+    // let mut a = get_params(&input[0][0]).parse::<usize>().unwrap();
     let b = get_params(&input[0][1]).parse::<usize>().unwrap();
     let c = get_params(&input[0][2]).parse::<usize>().unwrap();
     let prg = get_params(&input[1][0]);
 
-    let mut start = Instant::now();
     let mut pc: PC;
+    let mut a = 0;
     loop {
+        let start = Instant::now();
         pc = PC::new(a, b, c, &prg);
         pc.bipbop();
         pc.output.pop();
@@ -177,13 +178,9 @@ pub fn part_02() {
         if pc.output == prg {
             break;
         }
-        if start.elapsed() >= Duration::from_secs(30) {
-            println!("{:?}", pc.output);
-            start = Instant::now();
-        }
-
+        let dur = start.elapsed();
+        println!("{:?} {:}", dur, a);
         a += 1;
     }
-    let dur = start.elapsed();
-    println!("{:?}", dur);
+    println!("{:?}", a);
 }

@@ -103,30 +103,48 @@ impl MazeRunner {
         let mut winners: Vec<Runner> = Vec::new();
         let mut new_runners: Vec<Runner> = Vec::new();
 
+        let mut been_there: Vec<Position> = Vec::new();
+        let mut smallest: usize = 0;
+
         while self.runners.len() > 0 {
             let start = Instant::now();
             self.runners.iter_mut().for_each(|rnr| {
                 if rnr.position.x == self.end_position.x && rnr.position.y == self.end_position.y {
                     winners.push(rnr.clone());
+                    if rnr.points < smallest || smallest == 0 {
+                        smallest = rnr.points;
+                    }
                 } else {
                     new_runners.extend(rnr.run());
                 }
             });
 
-            new_runners.sort_by(|a, b| a.points.cmp(&b.points));
+            if smallest != 0 {
+                new_runners.retain(|x| x.points <= smallest);
+            }
 
+            new_runners.sort_by(|a, b| a.points.cmp(&b.points));
+            let path = new_runners.iter().flat_map(|r| r.path.clone());
+            been_there.extend(path);
+            been_there.sort_by(|a, b| a.x.cmp(&b.x).then_with(|| a.y.cmp(&b.y)));
+            been_there.dedup();
             self.runners = new_runners
                 .iter()
                 .filter(|nr| {
                     !new_runners
                         .iter()
                         .any(|any| any.path.contains(&nr.position) && any.points < nr.points)
+                        || been_there
+                            .iter()
+                            .find(|bt| bt.x == nr.position.x && bt.y == nr.position.y)
+                            .is_none()
                 })
                 .map(|v| v.clone())
                 .collect();
 
             let dur = start.elapsed();
-            println!("{:?} {:}", dur, self.runners.len());
+            println!("{:?} {:?} {:?}", dur, new_runners.len(), smallest);
+
             new_runners.clear();
         }
 

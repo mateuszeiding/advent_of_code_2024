@@ -1,26 +1,8 @@
+use crate::enums::direction_enum::Direction;
 use crate::structs::position_struct::Position;
 use crate::utils::setup;
 use std::collections::{BTreeMap, HashMap};
 use std::ops::Range;
-
-#[derive(Hash, Eq, PartialEq, Debug, Clone)]
-enum Directions {
-    North,
-    East,
-    South,
-    West,
-}
-
-impl Directions {
-    fn next(self) -> Directions {
-        match self {
-            Directions::North => Directions::East,
-            Directions::East => Directions::South,
-            Directions::South => Directions::West,
-            Directions::West => Directions::North,
-        }
-    }
-}
 
 #[allow(dead_code)]
 pub fn part_01() {
@@ -66,7 +48,7 @@ pub fn part_01() {
     }
 
     let mut path: HashMap<String, Vec<Range<usize>>> = HashMap::new();
-    let mut curr_dir = Directions::North;
+    let mut curr_dir = Direction::North;
     fn map_y_ranges(
         hm: &mut HashMap<String, Vec<Range<usize>>>,
         from_to: Range<usize>,
@@ -88,7 +70,7 @@ pub fn part_01() {
         && curr_position.y != max_pos.y
     {
         match curr_dir {
-            Directions::North => {
+            Direction::North => {
                 let obstacle = obstacles_x[&curr_position.x.to_string()]
                     .iter()
                     .rev()
@@ -98,7 +80,7 @@ pub fn part_01() {
                     Some(o) => {
                         map_y_ranges(&mut path, *o + 1..curr_position.y, curr_position.x);
                         curr_position.y = o + 1;
-                        curr_dir = Directions::East;
+                        curr_dir = Direction::East;
                     }
                     None => {
                         for n in 0..curr_position.y + 1 {
@@ -113,7 +95,7 @@ pub fn part_01() {
                     }
                 }
             }
-            Directions::South => {
+            Direction::South => {
                 let obstacle = obstacles_x[&curr_position.x.to_string()]
                     .iter()
                     .find(|&&y| y > curr_position.y);
@@ -123,7 +105,7 @@ pub fn part_01() {
                         map_y_ranges(&mut path, curr_position.y..*o, curr_position.x);
 
                         curr_position.y = o - 1;
-                        curr_dir = Directions::West;
+                        curr_dir = Direction::West;
                     }
                     None => {
                         for n in curr_position.y..max_pos.y {
@@ -138,7 +120,7 @@ pub fn part_01() {
                     }
                 }
             }
-            Directions::East => {
+            Direction::East => {
                 let obstacle = obstacles_y[&curr_position.y.to_string()]
                     .iter()
                     .find(|&&x| x > curr_position.x);
@@ -153,7 +135,7 @@ pub fn part_01() {
                             });
 
                         curr_position.x = o - 1;
-                        curr_dir = Directions::South;
+                        curr_dir = Direction::South;
                     }
                     None => {
                         path.entry(curr_position.x.to_string())
@@ -166,7 +148,7 @@ pub fn part_01() {
                     }
                 }
             }
-            Directions::West => {
+            Direction::West => {
                 let obstacle = obstacles_y[&curr_position.y.to_string()]
                     .iter()
                     .rev()
@@ -182,7 +164,7 @@ pub fn part_01() {
                             });
 
                         curr_position.x = o + 1;
-                        curr_dir = Directions::North;
+                        curr_dir = Direction::North;
                     }
                     None => {
                         path.entry(curr_position.x.to_string())
@@ -230,19 +212,16 @@ fn merge_ranges(ranges: &mut Vec<Range<usize>>) -> Vec<Range<usize>> {
 
 #[allow(dead_code)]
 pub fn part_02() {
-    let input = setup::get_input_lines_vec(6, false);
+    let input = setup::get_input_lines_vec(6, true);
     let matrix = setup::get_input_matrix(input);
-    let mut curr_position: Position = Position { x: 0, y: 0 };
+    let mut curr_position: Position = Position::new(0, 0);
     let mut obstacles: Vec<Position> = Vec::new();
-    let max_pos: Position = Position {
-        x: matrix[0].len().clone() - 1,
-        y: matrix.len().clone() - 1,
-    };
+    let max_pos: Position = Position::new(matrix[0].len(), matrix.len());
 
     for y in 0..matrix.len() {
         for (x, el) in matrix[y].iter().enumerate() {
             match el.as_str() {
-                "#" => obstacles.push(Position { x, y }),
+                "#" => obstacles.push(Position::new(x, y)),
                 "^" => {
                     curr_position.x = x;
                     curr_position.y = y;
@@ -254,105 +233,75 @@ pub fn part_02() {
 
     obstacles.sort_by(|a, b| a.x.cmp(&b.x).then_with(|| a.y.cmp(&b.y)));
 
-    let finder = |obst: &&Position, cp: &Position, dir: &Directions| match dir {
-        Directions::North => obst.x == cp.x && obst.y < cp.y,
-        Directions::South => obst.x == cp.x && obst.y > cp.y,
-        Directions::East => obst.y == cp.y && obst.x > cp.x,
-        Directions::West => obst.y == cp.y && obst.x < cp.x,
+    let finder = |obst: &&Position, cp: &Position, dir: &Direction| match dir {
+        Direction::North => obst.x == cp.x && obst.y < cp.y,
+        Direction::South => obst.x == cp.x && obst.y > cp.y,
+        Direction::East => obst.y == cp.y && obst.x > cp.x,
+        Direction::West => obst.y == cp.y && obst.x < cp.x,
     };
 
-    let mut past_obst: HashMap<Directions, Vec<Position>> = HashMap::new();
+    let mut past_obst: HashMap<Direction, Vec<Position>> = HashMap::new();
     let go_on_adventure = |scp: &Position,
-                           sdir: &Directions,
-                           po: &HashMap<Directions, Vec<Position>>|
-     -> Option<(Directions, Position)> {
+                           sdir: &Direction,
+                           po: &HashMap<Direction, Vec<Position>>|
+     -> Option<(Direction, Position)> {
         let mut cp = scp.clone();
         let mut dir = sdir.clone().next();
         let mut matrix_cp = matrix.clone();
-        while cp.x != 0 && cp.x != max_pos.x && cp.y != 0 && cp.y != max_pos.y {
-            let obstacle = obstacles.iter().find(|x| finder(x, &cp, &dir));
+        let print_obstacle = |matrix_cp: &mut Vec<Vec<String>>, x: usize, y: usize| {
+            matrix_cp[y][x] = "•".to_string();
+            setup::print_matrix(
+                &matrix_cp,
+                Some(|_y, _x, c: String| {
+                    print!("{}", c);
+                }),
+            );
+        };
 
-            match obstacle {
+        while !cp.is_min_max(max_pos.x, max_pos.y) {
+            match obstacles.iter().rev().find(|x| finder(x, &cp, &dir)) {
                 None => match dir {
-                    Directions::North => cp.y = 0,
-                    Directions::South => cp.y = max_pos.y,
-                    Directions::East => cp.x = max_pos.x,
-                    Directions::West => cp.x = 0,
+                    Direction::North => cp.y = 0,
+                    Direction::South => cp.y = max_pos.y,
+                    Direction::East => cp.x = max_pos.x,
+                    Direction::West => cp.x = 0,
                 },
-
                 Some(obst) => {
                     let po_vec = po.get(&dir);
                     if po_vec.is_some() && po_vec.unwrap().iter().find(|&x| x.eq(obst)).is_some() {
-                        match dir {
-                            Directions::North => cp.x -= 1,
-                            Directions::South => cp.x += 1,
-                            Directions::East => cp.y -= 1,
-                            Directions::West => cp.y += 1,
-                        };
+                        cp.next_step(&dir);
+                        dir = dir.next();
+                        print_obstacle(&mut matrix_cp, cp.x, cp.y);
 
-                        matrix_cp[cp.y][cp.x] = "🟨".to_string();
-                        setup::print_matrix(
-                            &matrix_cp,
-                            Some(|_y, _x, c: String| {
-                                print!("{}", c);
-                            }),
-                        );
-                        println!("-------");
-                        return Some((dir, cp.clone()));
+                        return Some((dir, *obst));
                     }
 
                     matrix_cp[cp.y][cp.x] = "0".to_string();
-                    match dir {
-                        Directions::North => cp.y = obst.y + 1,
-                        Directions::South => cp.y = obst.y - 1,
-                        Directions::East => cp.x = obst.x - 1,
-                        Directions::West => cp.x = obst.x + 1,
-                    }
-
                     dir = dir.next();
                 }
             }
         }
 
-        return None;
+        None
     };
 
     let mut sum = 0;
-    let mut curr_dir = Directions::North;
+    let mut curr_dir = Direction::North;
 
-    let mut umpaloop_village: HashMap<Directions, Vec<Position>> = HashMap::new();
-    while curr_position.x != 0
-        && curr_position.x != max_pos.x
-        && curr_position.y != 0
-        && curr_position.y != max_pos.y
-    {
-        let obstacle = obstacles
+    let mut umpaloop_village: HashMap<Direction, Vec<Position>> = HashMap::new();
+
+    while curr_position.is_not_min_max(max_pos.x, max_pos.y) {
+        let going_there = match obstacles
             .iter()
-            .find(|x| finder(x, &curr_position, &curr_dir));
-
-        let mut addi = 0;
-        let going_there = if obstacle.is_none() {
-            addi = 1;
-            match curr_dir {
-                Directions::North => Position {
-                    y: 0,
-                    x: curr_position.x,
-                },
-                Directions::South => Position {
-                    y: max_pos.y,
-                    x: curr_position.x,
-                },
-                Directions::East => Position {
-                    x: max_pos.x,
-                    y: curr_position.y,
-                },
-                Directions::West => Position {
-                    x: 0,
-                    y: curr_position.y,
-                },
-            }
-        } else {
-            *obstacle.unwrap()
+            .find(|obst| finder(obst, &curr_position, &curr_dir))
+        {
+            None => match curr_dir {
+                Direction::North => Position::new(curr_position.x, 0),
+                Direction::South => Position::new(curr_position.x, max_pos.y + 1),
+                Direction::East => Position::new(max_pos.x + 1, curr_position.y),
+                Direction::West => Position::new(0, curr_position.y),
+            },
+            Some(ob) => *ob,
         };
 
         past_obst
@@ -361,44 +310,47 @@ pub fn part_02() {
             .push(going_there);
 
         while match curr_dir {
-            Directions::North => curr_position.y > going_there.y + 1 - addi,
-            Directions::South => curr_position.y < going_there.y - 1 + addi,
-
-            Directions::East => curr_position.x < going_there.x - 1 + addi,
-            Directions::West => curr_position.x > going_there.x + 1 - addi,
+            Direction::North => curr_position.y > going_there.y + 1,
+            Direction::South => curr_position.y < going_there.y - 1,
+            Direction::East => curr_position.x < going_there.x - 1,
+            Direction::West => curr_position.x > going_there.x + 1,
         } {
-            match curr_dir {
-                Directions::North => curr_position.y -= 1,
-                Directions::South => curr_position.y += 1,
-                Directions::East => curr_position.x += 1,
-                Directions::West => curr_position.x -= 1,
-            }
-            //println!("{:?} {:?} {:?}", curr_position, going_there, curr_dir);
-
-            let loopa_umper = go_on_adventure(&curr_position, &curr_dir, &past_obst);
-            if loopa_umper.is_some() {
-                let lu = loopa_umper.unwrap();
-                let lukey = umpaloop_village.get(&lu.0);
-                if lukey.is_none() || lukey.unwrap().iter().find(|x| x.eq(&&lu.1)).is_none() {
-                    umpaloop_village
-                        .entry(lu.0)
-                        .or_insert_with(Vec::new)
-                        .push(lu.1);
-
+            curr_position.next_step(&curr_dir);
+            match go_on_adventure(&curr_position, &curr_dir, &past_obst) {
+                Some(lu) => {
+                    let (k, v) = lu;
+                    println!("{:?}", lu.1.clone());
+                    umpaloop_village.entry(k).or_insert_with(Vec::new).push(v);
                     sum += 1;
                 }
+                None => {}
             }
-            if curr_position.x == 0
-                || curr_position.x == max_pos.x
-                || curr_position.y == 0
-                || curr_position.y == max_pos.y
-            {
+
+            if curr_position.is_min_max(max_pos.x, max_pos.y) {
                 break;
             }
         }
+
         curr_dir = curr_dir.next();
     }
 
-    println!("{:?}", umpaloop_village);
+    umpaloop_village.iter_mut().for_each(|(_, v)| {
+        v.sort_by(|a, b| a.x.cmp(&b.x).then_with(|| a.y.cmp(&b.y)));
+        v.dedup();
+    });
+
+    println!(
+        "{:?}",
+        umpaloop_village.values().map(|v| v.len()).sum::<usize>()
+    );
+
+    let mut m: Vec<_> = umpaloop_village
+        .iter_mut()
+        .flat_map(|(_, v)| v.clone())
+        .collect();
+
+    m.sort_by(|a, b| a.x.cmp(&b.x).then_with(|| a.y.cmp(&b.y)));
+    m.dedup();
+    println!("{:?} {:}", m, m.len());
     println!("{:?}", sum);
 }

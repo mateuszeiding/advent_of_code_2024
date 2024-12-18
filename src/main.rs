@@ -1,5 +1,6 @@
 use solutions::*;
 
+mod enums;
 mod solutions;
 mod structs;
 mod utils;
@@ -16,7 +17,7 @@ fn main() {
     // day_05::part_01();
     // day_05::part_02();
     // day_06::part_01();
-    // day_06::part_02();
+    day_06::part_02();
     // day_07::part_01();
     // day_07::part_02();
     // day_08::part_01();
@@ -39,5 +40,5 @@ fn main() {
     // day_17::part_01();
     // day_17::part_02();
     // day_18::part_01();
-    day_18::part_02();
+    // day_18::part_02();
 }
