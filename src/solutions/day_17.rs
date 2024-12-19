@@ -1,6 +1,6 @@
 use crate::utils::setup;
 use regex::Regex;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 struct PC {
     reg_a: usize,
