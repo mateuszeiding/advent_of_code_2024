@@ -1,6 +1,7 @@
 use crate::enums::direction_enum::Direction;
+use std::cmp::Ordering;
 
-#[derive(Copy, Hash, Clone, Debug)]
+#[derive(Copy, PartialOrd, Hash, Clone, Debug)]
 pub struct Position {
     pub x: usize,
     pub y: usize,
@@ -9,6 +10,17 @@ pub struct Position {
 impl PartialEq for Position {
     fn eq(&self, other: &Self) -> bool {
         self.x == other.x && self.y == other.y
+    }
+}
+
+impl Ord for Position {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let first_cmp = self.x.cmp(&other.x);
+        if first_cmp != Ordering::Equal {
+            return first_cmp;
+        }
+
+        self.y.cmp(&other.y)
     }
 }
 

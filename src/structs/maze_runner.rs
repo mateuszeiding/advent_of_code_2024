@@ -101,51 +101,57 @@ impl MazeRunner {
 
     pub fn run(&mut self, print_winners: bool) -> Vec<Runner> {
         let mut winners: Vec<Runner> = Vec::new();
-        let mut new_runners: Vec<Runner> = Vec::new();
 
-        let mut been_there: Vec<Position> = Vec::new();
         let mut smallest: usize = 0;
 
+        let mut iter = 0;
         while self.runners.len() > 0 {
+            let mut grouped: HashMap<Position, Vec<Runner>> = HashMap::new();
+
             let start = Instant::now();
-            self.runners.iter_mut().for_each(|rnr| {
-                if rnr.position.x == self.end_position.x && rnr.position.y == self.end_position.y {
-                    winners.push(rnr.clone());
-                    if rnr.points < smallest || smallest == 0 {
-                        smallest = rnr.points;
+            self.runners.iter_mut().for_each(|runner| {
+                if runner.position == *self.end_position {
+                    winners.push(runner.clone());
+                    if runner.points < smallest || smallest == 0 {
+                        smallest = runner.points;
                     }
                 } else {
-                    new_runners.extend(rnr.run());
+                    for nr in &runner.run() {
+                        let entry = grouped.entry(nr.position).or_insert_with(Vec::new);
+                        match entry.iter_mut().find(|e| e.points == nr.points) {
+                            Some(e) => {
+                                e.path.extend(&nr.path);
+                                e.path.sort();
+                                e.path.dedup();
+                            }
+                            None => entry.push(nr.clone()),
+                        }
+                    }
                 }
             });
 
+            let mut flat = grouped
+                .iter()
+                .flat_map(|(_, x)| x.to_owned())
+                .collect::<Vec<Runner>>();
+
             if smallest != 0 {
-                new_runners.retain(|x| x.points <= smallest);
+                flat.retain(|x| x.points <= smallest);
             }
 
-            new_runners.sort_by(|a, b| a.points.cmp(&b.points));
-            let path = new_runners.iter().flat_map(|r| r.path.clone());
-            been_there.extend(path);
-            been_there.sort_by(|a, b| a.x.cmp(&b.x).then_with(|| a.y.cmp(&b.y)));
-            been_there.dedup();
-            self.runners = new_runners
-                .iter()
-                .filter(|nr| {
-                    !new_runners
-                        .iter()
-                        .any(|any| any.path.contains(&nr.position) && any.points < nr.points)
-                        || been_there
-                            .iter()
-                            .find(|bt| bt.x == nr.position.x && bt.y == nr.position.y)
-                            .is_none()
-                })
-                .map(|v| v.clone())
-                .collect();
+            self.runners.clear();
 
+            self.runners = flat;
             let dur = start.elapsed();
-            println!("{:?} {:?} {:?}", dur, new_runners.len(), smallest);
+            println!(
+                "{:} -- {:?} {:?} {:?}",
+                iter,
+                dur,
+                self.runners.len(),
+                smallest
+            );
 
-            new_runners.clear();
+            iter += 1;
         }
 
         let sm = winners.iter().map(|p| p.points).min().unwrap();

@@ -36,11 +36,11 @@ fn main() {
     // day_15::part_01();
     // day_15::part_02();
     // day_16::part_01();
-    // day_16::part_02();
+    day_16::part_02();
     // day_17::part_01();
     // day_17::part_02();
     // day_18::part_01();
     // day_18::part_02();
     // day_19::part_01();
-    day_19::part_02();
+    // day_19::part_02();
 }
