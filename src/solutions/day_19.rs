@@ -15,33 +15,32 @@ impl TowelGenerator {
     }
 
     pub fn find_all_possible_combinations(&mut self, towel: &str) {
-        let mut test_towels: Vec<String> = Vec::new();
+        let mut towel_combo: HashMap<usize, usize> = HashMap::new();
 
-        self.available_towels.iter().for_each(|at| {
-            if *at == towel[0..at.len()] {
-                test_towels.push(at.to_string())
-            }
-        });
-
-        while test_towels.len() > 0 {
-            let mut n_tt: Vec<String> = Vec::new();
-            test_towels.iter().for_each(|tt| {
-                let new = TowelGenerator::get_next_chunks(&self.available_towels, tt, towel);
-                n_tt.extend(new);
-            });
-
-            test_towels.clear();
-            n_tt.iter().for_each(|tt| {
-                if tt == towel {
-                    self.possible_towels += 1;
-                } else {
-                    test_towels.push(tt.to_string());
-                }
+        for n in 0..=towel.len() {
+            let new = TowelGenerator::get_next_chunks(&self.available_towels, &towel[0..n], towel);
+            new.iter().for_each(|n| {
+                let len = n.len();
+                let entry = towel_combo.entry(len).or_insert(0);
+                *entry += 1;
             });
         }
+
+        let mut keys: Vec<_> = towel_combo.keys().collect();
+        keys.sort();
+
+        let sum = towel_combo.iter().map(|(_, v)| v);
+        let mut s = 1;
+        for (i, v) in &towel_combo {
+            s *= v * i;
+        }
+        println!("{:?}", s);
+        // .filter(|&v| v != &1)
+
+        self.possible_towels += sum.sum::<usize>();
     }
 
-    pub fn check_towel_is_possible(&mut self, towel: &str) {
+    pub fn check_towel_is_possible(&mut self, towel: &str) -> bool {
         let mut test_towels: Vec<String> = Vec::new();
 
         self.available_towels.iter().for_each(|at| {
@@ -64,13 +63,14 @@ impl TowelGenerator {
 
             if n_tt.iter().find(|&(_, tt)| tt == towel).is_some() {
                 self.possible_towels += 1;
-
-                break;
+                return true;
             } else {
                 test_towels.clear();
                 test_towels = n_tt.iter().map(|(_, v)| v.clone()).collect::<Vec<String>>();
             }
         }
+
+        false
     }
 
     fn get_next_chunks(at: &Vec<String>, test: &str, towel: &str) -> Vec<String> {
@@ -111,9 +111,18 @@ pub fn part_02() {
         .collect();
 
     let mut tg = TowelGenerator::new(at);
+    let mut pt = 0;
     input[1].iter().for_each(|t| {
         println!("{:?}", &t);
-        tg.find_all_possible_combinations(t);
+        if tg.check_towel_is_possible(t) {
+            pt += 1;
+            tg.find_all_possible_combinations(t);
+        }
     });
-    println!("{:#?}", tg.possible_towels);
+    println!(
+        "{:#?} {:} {:?}",
+        tg.possible_towels,
+        pt,
+        tg.possible_towels - pt
+    );
 }
